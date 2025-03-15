@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
+import http from "http"; 
 import { initializeSocket } from "./socket/socket.js";
 
 import ErrorHandler from "./middleware/ErrorHandler.js";
@@ -16,6 +17,11 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+const server = http.createServer(app); // ✅ Create an HTTP server for WebSockets
+
+
+  initializeSocket(server);
+
 
 // Middleware
 app.use(cors());
@@ -24,17 +30,6 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
-
-// ✅ WebSocket API route (for Vercel)
-app.all("/api/socket", (req, res) => {
-  if (res.socket.server.io) {
-    console.log("✅ WebSocket server already running.");
-  } else {
-    console.log("🚀 Starting WebSocket server...");
-    initializeSocket(res); // ✅ Attach WebSocket server to `res.socket.server`
-  }
-  res.end();
-});
 
 // API Routes
 app.get("/api/health", (req, res) => {
@@ -57,5 +52,12 @@ app.use((req, res, next) => {
 // Error Handler Middleware
 app.use(ErrorHandler);
 
-// ✅ Export `app` for Vercel serverless functions (No need to listen on PORT)
+// ✅ Start server locally (not needed for Vercel)
+
+  server.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+
+
+// ✅ Export app for Vercel (serverless functions)
 export default app;

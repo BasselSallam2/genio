@@ -1,21 +1,14 @@
 import { Server } from "socket.io";
 
-export function initializeSocket(res) {
-  if (res.socket.server.io) {
-    console.log("✅ WebSocket server already running.");
-    return res.socket.server.io;
-  }
-
+export function initializeSocket(server) {
   console.log("🟢 Initializing WebSocket Server...");
 
-  const io = new Server(res.socket.server, {
-    path: "/api/socket", // ✅ Custom WebSocket path for Vercel
+  const io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: "*", // ✅ Allow all origins (Change in production)
       methods: ["GET", "POST"],
     },
-    transports: ["polling"], // ✅ Use polling for Vercel
-    addTrailingSlash: false, // ✅ Fix for WebSockets in Vercel
+    transports: ["websocket", "polling"], // ✅ Use WebSocket + Polling fallback
   });
 
   io.on("connection", (socket) => {
@@ -27,7 +20,7 @@ export function initializeSocket(res) {
 
     socket.on("sendMessage", (message) => {
       console.log("📩 Message received:", message);
-      io.emit("receiveMessage", message);
+      io.emit("receiveMessage", message); // ✅ Broadcast to all clients
     });
 
     socket.on("disconnect", () => {
@@ -35,6 +28,5 @@ export function initializeSocket(res) {
     });
   });
 
-  res.socket.server.io = io;
   return io;
 }
