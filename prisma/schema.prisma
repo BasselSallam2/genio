@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id         String     @id @default(uuid())
+  email      String     @unique
+  name       String    
+  phone      String
+  countrycode String
+  password   String
+  image      String?    
+  createdAt  DateTime   @default(now())
+  Isactive   Boolean    @default(true)
+  messageCounter Int    @default(0)
+  lastMessgae    DateTime?
+  resetCode  String?
+  resetexpire DateTime?
+  resetpermession Boolean @default(false)
+  Subscription  Subscription[]
+}
+
+model Plan {
+  id        Int    @id @default(autoincrement())
+  name      String @unique
+  price     Float 
+  maximumMessages Int  
+  Subscription Subscription[]
+  PermissionPlan PermissionPlan[]
+}
+
+model Subscription {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  plan      Plan     @relation(fields: [planId], references: [id])
+  planId    Int
+  price     Int
+  voucher   Voucher  @relation(fields:[voucherId] , references:[id])
+  voucherId Int
+  startDate DateTime @default(now())
+  endDate   DateTime
+  Isactive  Boolean          @default(true)
+}
+
+model Voucher {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  avalibale Int      
+  consumed  Int      @default(0)
+  percentage Int     
+  maximum    Int  
+  createdAt DateTime @default(now())
+  Isactive  Boolean          @default(true)
+  Subscription Subscription[]
+}
+
+model Permission {
+  id        Int      @id @default(autoincrement())
+  permission String  @unique
+PermissionPlan PermissionPlan[]
+}
+
+model PermissionPlan {
+  planId       Int
+  permissionId Int
+  plan         Plan       @relation(fields: [planId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([planId, permissionId])
+}
+
+
+
+
+
